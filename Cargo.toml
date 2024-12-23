@@ -1,6 +1,8 @@
 [package]
-name = "fitness_workout_tracker_api"
+name = "rust-api"
 version = "0.1.0"
 edition = "2021"
 
 [dependencies]
+actix-web = "4.5.1"
+tokio = { version = "1.36.0", features = ["full"] }
