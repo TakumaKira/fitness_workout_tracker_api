@@ -1,8 +1,17 @@
 use actix_web::{get, App, HttpResponse, HttpServer, Responder};
+use serde::Serialize;
+
+#[derive(Serialize)]
+struct MessageResponse {
+    message: String,
+}
 
 #[get("/")]
 async fn hello() -> impl Responder {
-    HttpResponse::Ok().body("Hello, world!")
+    let response = MessageResponse {
+        message: "Hello, world!".to_string(),
+    };
+    HttpResponse::Ok().json(response)
 }
 
 #[actix_web::main]
