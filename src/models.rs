@@ -1,5 +1,5 @@
 use diesel::prelude::*;
-use serde::Serialize;
+use serde::{Serialize, Deserialize};
 use chrono::{DateTime, Utc};
 use crate::schema::messages;
 
@@ -13,11 +13,11 @@ pub struct Message {
 
 #[derive(Insertable)]
 #[diesel(table_name = messages)]
-pub struct NewMessage<'a> {
-    pub message: &'a str,
+pub struct NewMessage {
+    pub message: String,
 }
 
-#[derive(Serialize)]
+#[derive(Serialize, Deserialize)]
 pub struct MessageResponse {
     pub message: String,
 } 

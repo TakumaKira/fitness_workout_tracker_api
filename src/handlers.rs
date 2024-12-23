@@ -1,11 +1,14 @@
-use actix_web::{get, web, HttpResponse, Responder};
+use actix_web::{post, web, HttpResponse, Responder};
 use diesel::prelude::*;
 use crate::db::DbPool;
 use crate::models::{Message, NewMessage, MessageResponse};
 use crate::schema::messages;
 
-#[get("/")]
-pub async fn hello(pool: web::Data<DbPool>) -> impl Responder {
+#[post("/")]
+pub async fn hello(
+    message_data: web::Json<MessageResponse>,
+    pool: web::Data<DbPool>
+) -> impl Responder {
     let mut conn = match pool.get() {
         Ok(conn) => conn,
         Err(_) => {
@@ -16,14 +19,14 @@ pub async fn hello(pool: web::Data<DbPool>) -> impl Responder {
     };
 
     let new_message = NewMessage {
-        message: "Hello, world!",
+        message: message_data.message.clone(),
     };
 
     let result = web::block(move || {
         diesel::insert_into(messages::table)
             .values(&new_message)
             .returning(messages::message)
-            .get_result::<String>(&mut *conn)
+            .get_result::<String>(&mut conn)
     })
     .await;
 
