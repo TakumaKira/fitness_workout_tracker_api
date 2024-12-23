@@ -11,3 +11,7 @@ serde_json = "1.0"
 diesel = { version = "2.1.0", features = ["postgres", "chrono", "r2d2"] }
 chrono = { version = "0.4", features = ["serde"] }
 dotenvy = "0.15"
+uuid = { version = "1.0", features = ["v4"] }
+futures = "0.3.31"
+actix-utils = "3.0.1"
+pin-project = "1.1.7"

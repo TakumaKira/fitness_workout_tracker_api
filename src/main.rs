@@ -1,28 +1,34 @@
-mod models;
-mod handlers;
 mod db;
-mod schema;
+mod handlers;
 mod services;
+mod models;
+mod middleware;
 
 use actix_web::{App, HttpServer, web};
-use handlers::hello;
-use crate::services::MessageService;
 
 #[actix_web::main]
 async fn main() -> std::io::Result<()> {
   dotenvy::dotenv().ok();
   
-  let pool = db::init_db()
+  let pool = db::db::init_db()
     .expect("Failed to initialize database");
 
-  let message_service = web::Data::new(MessageService::new(pool));
+  let message_service = web::Data::new(services::message_service::MessageService::new(pool));
+  let auth_service = web::Data::new(services::auth_service::AuthService::new());
 
   HttpServer::new(move || {
     App::new()
       .app_data(message_service.clone())
-      .service(hello)
+      .app_data(auth_service.clone())
+      .wrap(actix_web::middleware::Logger::default())
+      .service(handlers::auth::login)
+      .service(
+        web::scope("/api")
+          .wrap(middleware::auth::Auth)
+          .service(handlers::message::hello)
+      )
   })
   .bind(("127.0.0.1", 8080))?
   .run()
-    .await
+  .await
 }
