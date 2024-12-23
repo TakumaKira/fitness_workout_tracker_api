@@ -1,18 +1,8 @@
-use actix_web::{get, App, HttpResponse, HttpServer, Responder};
-use serde::Serialize;
+mod models;
+mod handlers;
 
-#[derive(Serialize)]
-struct MessageResponse {
-    message: String,
-}
-
-#[get("/")]
-async fn hello() -> impl Responder {
-    let response = MessageResponse {
-        message: "Hello, world!".to_string(),
-    };
-    HttpResponse::Ok().json(response)
-}
+use actix_web::{App, HttpServer};
+use handlers::hello;
 
 #[actix_web::main]
 async fn main() -> std::io::Result<()> {
