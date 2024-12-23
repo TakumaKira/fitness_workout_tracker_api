@@ -1,44 +1,26 @@
 use actix_web::{post, web, HttpResponse, Responder};
-use diesel::prelude::*;
-use crate::db::DbPool;
-use crate::models::{Message, NewMessage, MessageResponse};
-use crate::schema::messages;
+use crate::models::MessageResponse;
+use crate::services::MessageService;
 
 #[post("/")]
 pub async fn hello(
-    message_data: web::Json<MessageResponse>,
-    pool: web::Data<DbPool>
+  message_data: web::Json<MessageResponse>,
+  service: web::Data<MessageService>,
 ) -> impl Responder {
-    let mut conn = match pool.get() {
-        Ok(conn) => conn,
-        Err(_) => {
-            return HttpResponse::InternalServerError().json(MessageResponse {
-                message: "Database connection error".to_string(),
-            })
-        }
-    };
+  let result = web::block(move || {
+    service.create_message(message_data.message.clone())
+  })
+  .await;
 
-    let new_message = NewMessage {
-        message: message_data.message.clone(),
-    };
-
-    let result = web::block(move || {
-        diesel::insert_into(messages::table)
-            .values(&new_message)
-            .returning(messages::message)
-            .get_result::<String>(&mut conn)
-    })
-    .await;
-
-    match result {
-        Ok(result) => match result {
-            Ok(message) => HttpResponse::Ok().json(MessageResponse { message }),
-            Err(_) => HttpResponse::InternalServerError().json(MessageResponse {
-                message: "Error creating message".to_string(),
-            }),
-        },
-        Err(_) => HttpResponse::InternalServerError().json(MessageResponse {
-            message: "Error creating message".to_string(),
-        }),
-    }
+  match result {
+    Ok(result) => match result {
+      Ok(message) => HttpResponse::Ok().json(MessageResponse { message }),
+      Err(_) => HttpResponse::InternalServerError().json(MessageResponse {
+        message: "Error creating message".to_string(),
+      }),
+    },
+    Err(_) => HttpResponse::InternalServerError().json(MessageResponse {
+      message: "Error creating message".to_string(),
+    }),
+  }
 }
